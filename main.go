@@ -62,6 +62,12 @@ func main() {
 	}
 	fmt.Println("CF CLI installed.")
 
+	fmt.Println("Logging in to Cloud Foundry...")
+	if ok := loginCF(); !ok {
+		fmt.Println("Unable to log in to Cloud Foundry.")
+		os.Exit(1)
+	}
+
 	fmt.Println("Generating cf push command...")
 	pushCommand := determinePushCommand()
 	if len(pushCommand) == 0 {
@@ -94,37 +100,15 @@ func main() {
 	os.Exit(0)
 }
 
-func takeDump(pipe io.ReadCloser, quit chan bool) {
-	ch := make(chan string)
+func determinePushCommand() (cmd []string) {
+	//Docker
+	dockerImage = reconcileWithEnvironment(dockerImage, "WERCKER_CF_DEPLOY_DOCKER_IMAGE", false)
 
-	go func() {
-		buf := make([]byte, 1024)
-		for {
-			n, err := pipe.Read(buf)
-			if n != 0 {
-				ch <- string(buf[:n])
-			}
-			if err != nil {
-				break
-			}
-		}
-		fmt.Println("dump finished")
-		close(ch)
-	}()
-
-loop:
-	for {
-		select {
-		case s, ok := <-ch:
-			if !ok {
-				break loop
-			}
-			fmt.Print(s)
-		case <-quit:
-			break loop
-		}
+	if len(dockerImage) > 0 {
+		commandString := fmt.Sprintf("push %s -o %s", appname, dockerImage)
+		cmd = strings.Split(commandString, " ")
 	}
-	fmt.Println("all done!")
+	return
 }
 
 func installCF() bool {
@@ -144,15 +128,28 @@ func installCF() bool {
 	return true
 }
 
-func determinePushCommand() (cmd []string) {
-	//Docker
-	dockerImage = reconcileWithEnvironment(dockerImage, "WERCKER_CF_DEPLOY_DOCKER_IMAGE", false)
-
-	if len(dockerImage) > 0 {
-		commandString := fmt.Sprintf("push %s -o %s", appname, dockerImage)
-		cmd = strings.Split(commandString, " ")
+func loginCF() bool {
+	loginCommand := exec.Command("cf", "login", "-a", api, "-u", usr, "-p", pwd, "-o", org, "-s", spc)
+	out, err := loginCommand.StdoutPipe()
+	if err != nil {
+		fmt.Printf("Error connecting command output to STDOUT: %s", err)
+		return false
 	}
-	return
+	if err = loginCommand.Start(); err != nil {
+		fmt.Printf("Error executing CF login command: %s", err)
+		return false
+	}
+
+	quit := make(chan bool)
+	takeDump(out, quit)
+
+	err = loginCommand.Wait()
+	go func() { quit <- true }()
+	if err != nil {
+		fmt.Printf("Error logging in to CF: %s\n", err)
+		return false
+	}
+	return true
 }
 
 func reconcileWithEnvironment(orig string, envName string, required bool) (result string) {
@@ -164,4 +161,36 @@ func reconcileWithEnvironment(orig string, envName string, required bool) (resul
 		errors = append(errors, fmt.Sprintf("%s not supplied via flag or environment.", envName))
 	}
 	return
+}
+
+func takeDump(pipe io.ReadCloser, quit chan bool) {
+	ch := make(chan string)
+
+	go func() {
+		buf := make([]byte, 1024)
+		for {
+			n, err := pipe.Read(buf)
+			if n != 0 {
+				ch <- string(buf[:n])
+			}
+			if err != nil {
+				break
+			}
+		}
+		close(ch)
+	}()
+
+loop:
+	for {
+		select {
+		case s, ok := <-ch:
+			if !ok {
+				break loop
+			}
+			fmt.Print(s)
+		case <-quit:
+			break loop
+		}
+	}
+	fmt.Println("all done!")
 }

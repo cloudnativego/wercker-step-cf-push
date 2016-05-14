@@ -75,7 +75,8 @@ func main() {
 		fmt.Printf("API: %s\nUSR: %s\nPWD: %s\nORG: %s\nSPC: %s\n", api, usr, pwd, org, spc)
 		os.Exit(1)
 	}
-	fmt.Printf("Generated Command: cf %v\n", pushCommand)
+	cmdString := strings.Join(pushCommand, " ")
+	fmt.Printf("Generated Command: cf %s\n", cmdString)
 
 	fmt.Println("Deploying app...")
 	deployCommand := exec.Command("cf", pushCommand...)
@@ -192,5 +193,4 @@ loop:
 			break loop
 		}
 	}
-	fmt.Println("all done!")
 }

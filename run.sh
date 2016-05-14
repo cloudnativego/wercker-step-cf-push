@@ -1,3 +1,4 @@
 #! /bin/bash
 
-cf-push-step "$@"
+
+eval "./cf-push-step $@";

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -71,14 +72,59 @@ func main() {
 	fmt.Printf("Generated Command: cf %v\n", pushCommand)
 
 	fmt.Println("Deploying app...")
-	deployCommand := exec.Command("./cf", pushCommand...)
-	err := deployCommand.Run()
+	deployCommand := exec.Command("cf", pushCommand...)
+	out, err := deployCommand.StdoutPipe()
+	if err != nil {
+		fmt.Printf("Error writing output to STDOUT: %s", err)
+	}
+	if err = deployCommand.Start(); err != nil {
+		fmt.Printf("Error executing command: %s", err)
+	}
+
+	quit := make(chan bool)
+	takeDump(out, quit)
+
+	err = deployCommand.Wait()
+	go func() { quit <- true }()
 	if err != nil {
 		fmt.Printf("ERROR OCCURRED: %s\n", err)
 		os.Exit(1)
 	}
 	fmt.Printf("SUCCESS.\n")
 	os.Exit(0)
+}
+
+func takeDump(pipe io.ReadCloser, quit chan bool) {
+	ch := make(chan string)
+
+	go func() {
+		buf := make([]byte, 1024)
+		for {
+			n, err := pipe.Read(buf)
+			if n != 0 {
+				ch <- string(buf[:n])
+			}
+			if err != nil {
+				break
+			}
+		}
+		fmt.Println("dump finished")
+		close(ch)
+	}()
+
+loop:
+	for {
+		select {
+		case s, ok := <-ch:
+			if !ok {
+				break loop
+			}
+			fmt.Print(s)
+		case <-quit:
+			break loop
+		}
+	}
+	fmt.Println("all done!")
 }
 
 func installCF() bool {

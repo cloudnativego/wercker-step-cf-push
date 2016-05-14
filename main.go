@@ -43,7 +43,7 @@ func main() {
 	fmt.Printf("API: %s\nUSR: %s\nPWD: %s\nORG: %s\nSPC: %s\n", api, usr, pwd, org, spc)
 
 	//	api = os.Getenv("WERCKER_CF_DEPLOY_API")
-	//	usr = os.Getenv("WERCKER_CF_DEPLOY_USERNAME")
+	//	usr = os.Getenv("WERCKER_CF_DEPLOY_USER")
 	//	pwd = os.Getenv("WERCKER_CF_DEPLOY_PASSWORD")
 	//	org = os.Getenv("WERCKER_CF_DEPLOY_ORG")
 	//	spc = os.Getenv("WERCKER_CF_DEPLOY_SPACE")

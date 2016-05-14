@@ -4,4 +4,8 @@ pwd
 echo "---------------"
 ls -la
 echo "---------------"
-eval "./cf-push-step $@";
+
+pushd `dirname $0` > /dev/null
+SCRIPTPATH=`pwd -P`
+popd > /dev/null
+eval "$SCRIPTPATH/cf-push-step $@";

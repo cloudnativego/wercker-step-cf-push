@@ -13,13 +13,9 @@ build:
           export PATH=$WERCKER_SOURCE_DIR/bin:$PATH
 
     - script:
-          name: prepare output
-          code: rm -rf $WERCKER_ROOT/.git
-
-    - script:
         name: go build
         code: |
-          go build -o cf-push-step
+          go build -o ${WERCKER_OUTPUT_DIR}/cf-push-step
 
     - script:
         name: copy files to wercker output

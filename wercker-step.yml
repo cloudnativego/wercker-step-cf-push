@@ -1,5 +1,5 @@
 name: cf-deploy
-version: 0.0.3
+version: 0.0.4
 description: Deploy application to Cloud Foundry via `cf push`
 keywords:
   - pivotal

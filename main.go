@@ -71,7 +71,7 @@ func main() {
 	fmt.Printf("Generated Command: cf %v\n", pushCommand)
 
 	fmt.Println("Deploying app...")
-	deployCommand := exec.Command("cf", pushCommand...)
+	deployCommand := exec.Command("./cf", pushCommand...)
 	err := deployCommand.Run()
 	if err != nil {
 		fmt.Printf("ERROR OCCURRED: %s\n", err)

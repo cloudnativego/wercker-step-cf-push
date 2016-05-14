@@ -26,3 +26,5 @@ _projects/
 _steps/
 
 cf-push-step
+/cf
+/cf.tgz

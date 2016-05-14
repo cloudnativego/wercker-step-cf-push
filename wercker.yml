@@ -15,7 +15,7 @@ build:
     - script:
         name: go build
         code: |
-          go build -o ${WERCKER_OUTPUT_DIR}/cf-push-step
+          go build -o cf-push-step
 
     - script:
         name: copy files to wercker output

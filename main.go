@@ -31,7 +31,7 @@ func main() {
 	flag.Parse()
 	errors = make([]string, 0)
 
-	api = reconcileWithEnvironment(api, "CF_API")
+	api = reconcileWithEnvironment(api, "WERCKER_CF_DEPLOY_API")
 
 	if len(errors) > 0 {
 		for _, v := range errors {
@@ -42,12 +42,12 @@ func main() {
 
 	fmt.Printf("API: %s\nUSR: %s\nPWD: %s\nORG: %s\nSPC: %s\n", api, usr, pwd, org, spc)
 
-	//	api = os.Getenv("WERCKER_CF_API")
-	//	usr = os.Getenv("WERCKER_CF_USERNAME")
-	//	pwd = os.Getenv("WERCKER_CF_PASSWORD")
-	//	org = os.Getenv("WERCKER_CF_ORG")
-	//	spc = os.Getenv("WERCKER_CF_SPACE")
-	//	appname = os.Getenv("WERCKER_CF_APP_NAME")
+	//	api = os.Getenv("WERCKER_CF_DEPLOY_API")
+	//	usr = os.Getenv("WERCKER_CF_DEPLOY_USERNAME")
+	//	pwd = os.Getenv("WERCKER_CF_DEPLOY_PASSWORD")
+	//	org = os.Getenv("WERCKER_CF_DEPLOY_ORG")
+	//	spc = os.Getenv("WERCKER_CF_DEPLOY_SPACE")
+	//	appname = os.Getenv("WERCKER_CF_DEPLOY_APPNAME")
 }
 
 func reconcileWithEnvironment(orig string, envName string) (result string) {

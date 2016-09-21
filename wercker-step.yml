@@ -29,3 +29,6 @@ properties:
   docker_image:
     type: string
     required: false
+  skip-ssl-validation:
+    type: string
+    required: false

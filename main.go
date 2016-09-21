@@ -25,6 +25,8 @@ var (
 	appname     string
 	errors      []string
 	dockerImage string
+	skipSslValidation bool
+	skipSslValidationPram string	
 )
 
 func init() {
@@ -35,6 +37,8 @@ func init() {
 	flag.StringVar(&spc, "space", notSupplied, "CF Space. Overrides SPACE env variable")
 	flag.StringVar(&appname, "appname", notSupplied, "Name of application to be pushed to Cloud Foundry. Overrides APPNAME env variable")
 	flag.StringVar(&dockerImage, "docker-image", notSupplied, "Optional. Path to docker image.  Overrides DOCKER_IMAGE env variable")
+	// booleans not yet supported from wercker
+	flag.StringVar(&skipSslValidationPram, "skip-ssl-validation", notSupplied, "Optional. Instructs the CF CLI to not validate SSL certificates")
 }
 
 func main() {
@@ -47,6 +51,8 @@ func main() {
 	org = reconcileWithEnvironment(org, "WERCKER_CF_DEPLOY_ORG", true)
 	spc = reconcileWithEnvironment(spc, "WERCKER_CF_DEPLOY_SPACE", true)
 	appname = reconcileWithEnvironment(appname, "WERCKER_CF_DEPLOY_APPNAME", true)
+	skipSslValidationPram := reconcileWithEnvironment(skipSslValidationPram, "WERCKER_CF_DEPLOY_SKIP_SSL_VALIDATION", true)	
+	skipSslValidation = (strings.ToLower(skipSslValidationPram) == "true")
 
 	if len(errors) > 0 {
 		for _, v := range errors {
@@ -130,7 +136,14 @@ func installCF() bool {
 }
 
 func loginCF() bool {
-	loginCommand := exec.Command("cf", "login", "-a", api, "-u", usr, "-p", pwd, "-o", org, "-s", spc)
+	args := []string{"login", "-a", api, "-u", usr, "-p", pwd, "-o", org, "-s", spc}
+
+	if(skipSslValidation) {
+		fmt.Printf("INSECURE: skipping ssl validtion.")		
+		args = append(args, "--skip-ssl-validation")
+	}
+
+	loginCommand := exec.Command("cf", args...)
 	out, err := loginCommand.StdoutPipe()
 	if err != nil {
 		fmt.Printf("Error connecting command output to STDOUT: %s", err)
